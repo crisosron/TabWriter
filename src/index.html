@@ -5,8 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Tab Writer</title>
+    <link rel="stylesheet" type="text/css" href="./styles.css">
 </head>
-<body>
-    
+<body> 
+    <div id="container">
+        <input type='text' id="scoreTitleInput" value="Score Title" />
+        <textarea id="tabInfoTextArea", value="Tab Info">Tab Info</textarea>
+        <div id="firstMeasure">
+            <table id="firstMeasureTable">
+                <tbody id="firstMeasureTableBody">
+                    <!--Programatically rows goes in here-->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="initFirstMeasure.js"></script>
 </body>
 </html>

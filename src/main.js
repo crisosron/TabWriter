@@ -9,8 +9,8 @@ const createWindow = () => {
 
     //Main BrowserWindow Object
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 500
+        width: 1000,
+        height: 600
     });
 
     mainWindow.loadFile('src/index.html');
@@ -84,10 +84,17 @@ const createMenu = () => {
                 {role: 'copy'},
                 {role: 'paste'},
                 {type: 'separator'},
+
                 {
                     label: 'New Measure',
                     click: function(){console.log('New Measure Clicked');},
                     accelerator: `${shortcutAccelerator}+Alt+N`
+                },
+
+                {
+                    label: 'New Bar',
+                    click: function(){console.log('New Bar Clicked');},
+                    accelerator: `${shortcutAccelerator}+B`
                 }
 
             ]
