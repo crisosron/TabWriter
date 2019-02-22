@@ -1,7 +1,10 @@
 /*jshint esversion: 6 */
 const electron = require('electron');
-const {app, BrowserWindow} = electron;
+//const {app, BrowserWindow} = electron;
+const {app} = electron;
+const {BrowserWindow} = electron;
 const {Menu} = electron;
+const ipcMain = electron.ipcMain;
 
 let isMacOS = process.platform === 'darwin' ? true : false;
 
@@ -9,8 +12,8 @@ const createWindow = () => {
 
     //Main BrowserWindow Object
     mainWindow = new BrowserWindow({
-        width: 1100,
-        height: 600
+        width: 1150,
+        height: 500
     });
 
     mainWindow.loadFile('src/index.html');
@@ -118,3 +121,10 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
     if(mainWindow === null) createWindow();
 });
+
+//First ackknowledge to create the first bar and measure - This event is triggerred from TabWriter.js
+ipcMain.on('setup-first-bar-and-measure', (event) => {
+    event.sender.send('create-first-bar-and-measure'); //Triggerring event in TabWriter.js
+});
+
+

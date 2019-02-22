@@ -1,8 +1,7 @@
 /*jshint esversion: 6*/
-/*Notes - 
-    Each measure is constructed using a table
-    Each measure should be contained within a bar (which is a div)
-*/
+const electron = require('electron');
+const ipcRenderer = electron.ipcRenderer;
+
 class TabWriterManager{
     constructor(){
         this._measures = [];
@@ -96,6 +95,16 @@ class TabWriterManager{
 
 }
 
+class Bar{
+    constructor(barDiv){
+        this._measuresWithinBar = [];
+        this._barDiv = barDiv;
+    }
+
+    get measuresWithinBar(){return this._measuresWithinBar;}
+    get barDiv(){return this._barDiv;}
+}
+
 class Measure{
     constructor(table, tableBody){
         this._inputCells = [];
@@ -108,28 +117,16 @@ class Measure{
     get measureTableBody(){return this._measureTableBody;}
 }
 
-class Bar{
-    constructor(barDiv){
-        this._measuresWithinBar = [];
-        this._barDiv = barDiv;
-    }
+let tabWriterManager = new TabWriterManager();
 
-    get measuresWithinBar(){return this._measuresWithinBar;}
-    get barDiv(){return this._barDiv;}
-}
+window.onload = () => {
 
-window.onload = function(){
-    setupFirstMeasure();
+    //First inital send to ipcMain in main.js
+    ipcRenderer.send('setup-first-bar-and-measure');
 };
 
-const setupFirstMeasure = () => {
+ipcRenderer.on('create-first-bar-and-measure', function(event){
     tabWriterManager.createBar();
     tabWriterManager.createMeasure();
-
-};
-
-function rendering(){
-    //TODO: Automatically fill empty input cells with an em dash (–)
-}
-
-let tabWriterManager = new TabWriterManager();
+    console.log('Created first bar and measure');
+});
