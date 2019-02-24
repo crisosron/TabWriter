@@ -1,6 +1,5 @@
 /*jshint esversion: 6 */
 const electron = require('electron');
-//const {app, BrowserWindow} = electron;
 const {app} = electron;
 const {BrowserWindow} = electron;
 const {Menu} = electron;
@@ -24,7 +23,6 @@ const createWindow = () => {
 
     //Automatically opens dev tools in a seperate window
     mainWindow.openDevTools({mode: 'undocked'});
-    
 
 };
 
@@ -56,7 +54,7 @@ const createMenu = () => {
 
                 {
                     label: 'Save As',
-                    click: function(){console.log('Save As Clicked');},
+                    click: function(){mainWindow.webContents.send('save-file');},
                     accelerator: `${shortcutAccelerator}+Shift+S`
                 },
 
@@ -90,13 +88,13 @@ const createMenu = () => {
 
                 {
                     label: 'New Measure',
-                    click: function(){console.log('New Measure Clicked');},
+                    click: function(){mainWindow.webContents.send('create-measure');}, //Sending request to ipcRenderer in TabWriter.js to create measure
                     accelerator: `${shortcutAccelerator}+Alt+N`
                 },
 
                 {
                     label: 'New Bar',
-                    click: function(){console.log('New Bar Clicked');},
+                    click: function(){mainWindow.webContents.send('create-bar');}, //Sending request to ipcRenderer in TabWriter.js to create bar
                     accelerator: `${shortcutAccelerator}+B`
                 }
 
@@ -126,5 +124,7 @@ app.on('activate', () => {
 ipcMain.on('setup-first-bar-and-measure', (event) => {
     event.sender.send('create-first-bar-and-measure'); //Triggerring event in TabWriter.js
 });
+
+
 
 
