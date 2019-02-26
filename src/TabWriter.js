@@ -15,6 +15,7 @@ class TabWriterManager{
         this._barCount = 0;
         this._container = document.getElementById('container');
         this._isFirstMeasure = true;
+        this._valueCells = []; //Used for opening a previously saved tab composition
     }
 
     get measures(){return this._measures;}
@@ -24,6 +25,7 @@ class TabWriterManager{
     get barCount(){return this._barCount;}
     get container(){return this._container;}
     get isFirstMeasure(){return this._isFirstMeasure;}
+    get valueCells(){return this._valueCells;}
     
     set measureCount(val){this._measureCount = val;}    
     set barCount(val){this._barCount = val;}
@@ -141,8 +143,7 @@ class TabWriterManager{
             }
 
             let contentToWrite = `Number of bars: ${numBarsToSave}\n`;
-            let testContent = 'test';
-
+            
             /*Coordinate system for writing details to file
              measureInBar:row:col:val*/
 
@@ -164,21 +165,76 @@ class TabWriterManager{
             /*Writing contents to file - fileName argument came from callback function from
             showSaveDialog method*/
             fs.writeFile(fileName, contentToWrite, (error, fd) => { //Callback function similar to try/catch fulfillment
-                if(error) alert(`Could not save file! - ${error}`);
+                if(error) {
+                    alert(`Could not save file! - ${error}`);
+                    return;
+                }
                 alert(`Saved Succssfully!`);
             });
         });
     }
 
     openFile(){
-        dialog.showOpenDialog(fileName => {
-            if(fileName === undefined){
-                alert('No file selected - Cancelling save');
-                return;
+        dialog.showOpenDialog(fileNames => {
+            if(fileNames === undefined){
+                alert('No file selected');
+            }else{
+                fs.readFile(fileNames[0], 'utf-8', (error, data) => {
+                    if(error){
+                        alert(`Cannot open file -  ${error}`);
+                        return;
+                    }
+
+                    //(for some reason this.processData does not work)
+                    tabWriterManager.processData(data);
+                    
+                });
             }
         });
     }
 
+    processData(readContents){
+
+        //Constant variables that help navigating through the readContents parameter to get info needed to create the tab
+        const INDEX_OF_NUM_BARS_TO_CREATE = 16;
+        const INDEX_OF_MEASURE_MODEL_START = 18;
+
+        const numBarsToCreate = parseInt(readContents[INDEX_OF_NUM_BARS_TO_CREATE]);
+        let separatorIndicator = 0;
+
+        //For creating a ValueCell object
+        let valueCellHomeBar = 0;
+        let valueCellRowVal = 0;
+        let valueCellColVal = 0;
+        let valueCellHeldValue = 0;
+
+        for(let i=INDEX_OF_MEASURE_MODEL_START; i<readContents.length; i++){
+            let val = readContents[i];
+            if(val === ':') continue;
+            if(val === ' ') { //Space separates different value cells
+                let newValueCell = new ValueCell(valueCellHomeBar, valueCellRowVal, valueCellColVal, valueCellHeldValue);
+                tabWriterManager.valueCells.push(newValueCell);
+                separatorIndicator = 0;
+            }
+            else{
+
+                //Switch statement to determine what the current value represents in relation to the value cell
+                switch(separatorIndicator){
+                    case 0: valueCellHomeBar = val; break;
+                    case 1: valueCellRowVal = val; break;
+                    case 2: valueCellColVal = val; break;
+                    case 3: valueCellHeldValue = val; break;
+                }
+
+                separatorIndicator++;
+            }
+        }
+
+        tabWriterManager.valueCells.forEach(valueCell => {
+            console.log(`${valueCell.homeBar}:${valueCell.rowVal}:${valueCell.colVal}:${valueCell.heldValue} \n`);
+            //console.log(valueCell);
+        });
+    }
 }
 
 class Bar{
@@ -205,6 +261,21 @@ class Measure{
     get homeBarNum(){return this._homeBar;}
 }
 
+//Used primarily for opening a file (see processData method on TabWriterManager class)
+class ValueCell {
+    constructor(homeBar, rowVal, colVal, heldValue){
+        this._homeBar = homeBar;
+        this._rowVal = rowVal;
+        this._colVal = colVal;
+        this._heldValue = heldValue;
+    }
+
+    get homeBar(){return this._homeBar;}
+    get rowVal(){return this._rowVal;}
+    get colVal(){return this._colVal;}
+    get heldValue(){return this._heldValue;}
+}
+
 let tabWriterManager = new TabWriterManager();
 
 window.onload = () => {
@@ -223,3 +294,4 @@ ipcRenderer.on('create-first-bar-and-measure', function(event){
 ipcRenderer.on('create-bar', tabWriterManager.createBar);
 ipcRenderer.on('create-measure', tabWriterManager.createMeasure);
 ipcRenderer.on('save-file', tabWriterManager.saveFile);
+ipcRenderer.on('open-file', tabWriterManager.openFile);

@@ -40,7 +40,7 @@ const createMenu = () => {
 
                 {
                     label: 'Open',
-                    click: function(){console.log('Open Clicked');},
+                    click: function(){mainWindow.webContents.send('open-file');},
                     accelerator: `${shortcutAccelerator}+O`
                 },
 
