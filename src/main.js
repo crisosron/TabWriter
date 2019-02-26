@@ -90,12 +90,6 @@ const createMenu = () => {
                     label: 'New Measure',
                     click: function(){mainWindow.webContents.send('create-measure');}, //Sending request to ipcRenderer in TabWriter.js to create measure
                     accelerator: `${shortcutAccelerator}+Alt+N`
-                },
-
-                {
-                    label: 'New Bar',
-                    click: function(){mainWindow.webContents.send('create-bar');}, //Sending request to ipcRenderer in TabWriter.js to create bar
-                    accelerator: `${shortcutAccelerator}+B`
                 }
 
             ]
@@ -121,8 +115,8 @@ app.on('activate', () => {
 });
 
 //First ackknowledge to create the first bar and measure - This event is triggerred from TabWriter.js
-ipcMain.on('setup-first-bar-and-measure', (event) => {
-    event.sender.send('create-first-bar-and-measure'); //Triggerring event in TabWriter.js
+ipcMain.on('setup-first-measure', (event) => {
+    event.sender.send('create-first-measure'); //Triggerring event in TabWriter.js
 });
 
 
