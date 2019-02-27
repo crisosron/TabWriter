@@ -8,6 +8,7 @@ const fs = require('fs'); //For file system
 //TODO: Make margin bottom for tables
 //TODO: Test save and open functionality after the removal of bars
 //TODO: Overhaul save functionality?
+//TODO: Fix open file processing to handle double digits - split string by :?
 
 class TabWriterManager{
     constructor(){
@@ -109,6 +110,8 @@ class TabWriterManager{
         newTable.appendChild(newTableBody);
         newDiv.appendChild(newTable);
         container.appendChild(newDiv);
+
+        return newMeasure;
     }
 
     reset(){
@@ -210,25 +213,24 @@ class TabWriterManager{
 
     processData(readContents){
 
-        //Constant variables that help navigating through the readContents parameter to get info needed to create the tab composition
-        const INDEX_OF_NUM_BARS_TO_CREATE = 16;
-        const INDEX_OF_MEASURE_MODEL_START = 18;
+        //Constant variable that help navigating through the readContents parameter to get info needed to create the tab composition
+        const INDEX_OF_MEASURE_MODEL_START = 0;
 
         //const numBarsToCreate = parseInt(readContents[INDEX_OF_NUM_BARS_TO_CREATE]);
         let separatorIndicator = 0;
 
         //For creating a ValueCell object
-        let valueCellHomeBar = 0;
+        let valueCellPositionOfMeasure = 0;
         let valueCellRowVal = 0;
         let valueCellColVal = 0;
         let valueCellHeldValue = 0;
 
         //Going through readContents and processing contents to create valueCell objects
         for(let i=INDEX_OF_MEASURE_MODEL_START; i<readContents.length; i++){
-            let val = readContents[i];
+            let val = readContents[i]; //TODO: FAILS ON DOUBLE DIGITS!!!!!!!!!!!!!!!
             if(val === ':') continue;
             if(val === ' ') { //Space separates different value cells
-                let newValueCell = new ValueCell(valueCellHomeBar, valueCellRowVal, valueCellColVal, valueCellHeldValue);
+                let newValueCell = new ValueCell(valueCellPositionOfMeasure, valueCellRowVal, valueCellColVal, valueCellHeldValue);
                 tabWriterManager.valueCells.push(newValueCell);
                 separatorIndicator = 0;
             }
@@ -236,26 +238,57 @@ class TabWriterManager{
 
                 //Switch statement to determine what the current value represents in relation to the value cell
                 switch(separatorIndicator){
-                    case 0: valueCellHomeBar = parseInt(val); break;
+                    case 0: valueCellPositionOfMeasure = parseInt(val); break;
                     case 1: valueCellRowVal = parseInt(val); break;
                     case 2: valueCellColVal = parseInt(val); break;
-                    case 3: valueCellColVal = val; break; //No need to parse this as this is the value held in the cell
+                    case 3: valueCellHeldValue = val; break; //No need to parse this as this is the value held in the cell
                 }
 
                 separatorIndicator++;
             }
         }
 
-        tabWriterManager.createOpenedTabComposition(numBarsToCreate);
+        tabWriterManager.createOpenedTabComposition();
     }
 
-    createOpenedTabComposition(numBarsToCreate){
+    createOpenedTabComposition(){
         let valueCells = tabWriterManager.valueCells;
-        
-        for(let i=0; i<numBarsToCreate; i++){
-            tabWriterManager.createBar();
+        let maxNumMeasures = 0;
+
+        //Creating measures
+        valueCells.forEach(valueCell => {
+            let measurePos = parseInt(valueCell.positionOfMeasure);
+            if(measurePos > maxNumMeasures) maxNumMeasures = measurePos;
+        });
+
+        let measuresToCreate = maxNumMeasures + 1; //+1 because measurePos is zero indexed
+
+        for(let i=0; i<measuresToCreate; i++){
+            tabWriterManager.createMeasure();
         }
 
+        valueCells.forEach(valueCell => {
+            let positionOfMeasure = parseInt(valueCell.positionOfMeasure);
+            let rowVal = valueCell.rowVal;
+            let colVal = valueCell.colVal;
+            let heldValue = valueCell.heldValue;
+
+            let measureOfInterest = tabWriterManager.measures[positionOfMeasure];
+            let tableOfInterest = measureOfInterest.measureTable;
+
+            for(let i=0; i<tabWriterManager.MEASURE_NUM_ROWS; i++){
+                if(i != rowVal) continue;
+                let rowInIteration = tableOfInterest.rows[i];
+                
+                for(let j=0; j<tabWriterManager.MEASURE_NUM_COLS; j++){
+                    if(j != colVal) continue;
+                    let colInIteration = rowInIteration.cells[j];
+
+                    if(rowVal == i && colVal == j) colInIteration.childNodes[0].value = heldValue;
+                }
+            }
+
+        });
     }
 }
 
@@ -287,14 +320,14 @@ class Measure{
 
 //Used primarily for opening a file (see processData method on TabWriterManager class)
 class ValueCell {
-    constructor(homeBar, rowVal, colVal, heldValue){
-        this._homeBar = homeBar;
+    constructor(positionOfMeasure, rowVal, colVal, heldValue){
+        this._positionOfMeasure = positionOfMeasure;
         this._rowVal = rowVal;
         this._colVal = colVal;
         this._heldValue = heldValue;
     }
     
-    get homeBar(){return this._homeBar;}
+    get positionOfMeasure(){return this._positionOfMeasure;}
     get rowVal(){return this._rowVal;}
     get colVal(){return this._colVal;}
     get heldValue(){return this._heldValue;}
