@@ -116,7 +116,7 @@ app.on('activate', () => {
 
 //First ackknowledge to create the first bar and measure - This event is triggerred from TabWriter.js
 ipcMain.on('setup-first-measure', (event) => {
-    event.sender.send('create-first-measure'); //Triggerring event in TabWriter.js
+    event.sender.send('create-measure'); //Triggerring event in TabWriter.js
 });
 
 

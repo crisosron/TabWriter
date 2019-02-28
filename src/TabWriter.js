@@ -5,11 +5,6 @@ const app = electron.remote; //.remote is 'bridge' between main and renderer pro
 const dialog = app.dialog;
 const fs = require('fs'); //For file system
 
-//TODO: Make margin bottom for tables
-//TODO: Test save and open functionality after the removal of bars
-//TODO: Overhaul save functionality?
-//TODO: Fix open file processing to handle double digits - split string by :?
-
 class TabWriterManager{
     constructor(){
         this._measures = [];
@@ -37,34 +32,13 @@ class TabWriterManager{
     set measures(val){this._measures = val;}
     set valueCells(val){this._valueCells = val;}
 
-    /*
-    createBar(){
-        let newBarDiv = document.createElement('div');
-        newBarDiv.id = `bar${tabWriterManager.barCount}`;
-        newBarDiv.style.marginBottom = '30px';
-
-        //Changing barCount or not for zero indexing consistency with arrays
-        if(tabWriterManager.isFirstMeasure) tabWriterManager.isFirstMeasure = false; //No increment if first measure for proper zero indexing
-        else tabWriterManager.barCount += 1;
-
-        let newBar = new Bar(newBarDiv);
-        tabWriterManager.bars.push(newBar);
-        container.appendChild(newBarDiv);
-
-    }
-    */
-
     createMeasure(){
 
         //Creating table and table body to hold the measure
         let newTable = document.createElement('table');
         let newTableBody = document.createElement('tbody');
-        let newDiv = document.createElement('div');
-        newDiv.style.marginBottom = '300px';
-        newDiv.style.height = '500px';
-        newDiv.style.display = 'inline';
         newTable.id = `measure${tabWriterManager.measureCount}`;
-        newTable.style.display = 'inline';
+        newTable.style.display = 'inline-block';
         newTableBody.id = `measure${tabWriterManager.measureCount}body`;
 
         //Variable for width of cells in measure table
@@ -108,8 +82,7 @@ class TabWriterManager{
         
         //Making the table and the input cells appear on the application
         newTable.appendChild(newTableBody);
-        newDiv.appendChild(newTable);
-        container.appendChild(newDiv);
+        container.appendChild(newTable);
 
         return newMeasure;
     }
@@ -119,6 +92,7 @@ class TabWriterManager{
         tabWriterManager.measureCount = 0;
         tabWriterManager.valueCells = [];
         tabWriterManager.measures = [];
+        while(container.firstChild) container.removeChild(container.firstChild);//Removing child nodes (measures/tables) being stored in the container
     }
 
     saveFile(){
@@ -165,8 +139,6 @@ class TabWriterManager{
             
             /*Coordinate system for writing details to file
              positionOfMeasure:row:col:val*/
-
-             //TODO: Make this into a seperate function with a measureArray and contentToWrite as parameters
             //Looping through measures
             for(let i=0; i<measureArrays.length; i++){
                 let measureArray = measureArrays[i];
@@ -224,7 +196,6 @@ class TabWriterManager{
             if(readContents[i] != ' ') infoAsString += readContents[i];
             else {
                 infoStringArray = infoAsString.split(':');
-                console.log(infoStringArray);
                 let newValueCell = new ValueCell(infoStringArray[0], infoStringArray[1], infoStringArray[2], infoStringArray[3]);
                 tabWriterManager.valueCells.push(newValueCell);
                 infoAsString = '';
@@ -232,7 +203,7 @@ class TabWriterManager{
 
             }
         }
-        
+
         tabWriterManager.createOpenedTabComposition();
     }
 
@@ -277,18 +248,6 @@ class TabWriterManager{
     }
 }
 
-/*
-class Bar{
-    constructor(barDiv){
-        this._measuresWithinBar = [];
-        this._barDiv = barDiv;
-    }
-
-    get measuresWithinBar(){return this._measuresWithinBar;}
-    get barDiv(){return this._barDiv;}
-}
-*/
-
 class Measure{
     constructor(table, tableBody, measurePos){
         this._inputCells = [];
@@ -325,12 +284,6 @@ window.onload = () => {
     //First inital send to ipcMain in main.js - Note that the chain must start from the renderer process to the main process - Hence the first send is here
     ipcRenderer.send('setup-first-measure');
 };
-
-//Correlated with first inital send to ipcMain - ipcMain will reply by sending a request to this channel
-ipcRenderer.on('create-first-measure', function(event){
-    tabWriterManager.createMeasure();
-    console.log('Created first bar and measure');
-});
 
 //For menu items from main process
 ipcRenderer.on('create-measure', tabWriterManager.createMeasure);
