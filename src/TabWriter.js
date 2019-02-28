@@ -4,6 +4,7 @@ const ipcRenderer = electron.ipcRenderer;
 const app = electron.remote; //.remote is 'bridge' between main and renderer processes
 const dialog = app.dialog;
 const fs = require('fs'); //For file system
+const BrowserWindow = electron.remote.BrowserWindow;
 
 class TabWriterManager{
     constructor(){
@@ -15,6 +16,8 @@ class TabWriterManager{
         this._valueCells = []; //Used for opening a previously saved tab composition
         this._MEASURE_NUM_ROWS = 6;
         this._MEASURE_NUM_COLS = 21;
+        this._scoreTitleInput = document.getElementById('scoreTitleInput');
+        this._scoreInfoTextArea = document.getElementById('tabInfoTextArea');
     }
 
     get measures(){return this._measures;}
@@ -26,6 +29,8 @@ class TabWriterManager{
     get MEASURE_NUM_ROWS(){return this._MEASURE_NUM_ROWS;}
     get MEASURE_NUM_COLS(){return this._MEASURE_NUM_COLS;}
     get currentBar(){return this._currentBar;}
+    get scoreTitleInput(){return this._scoreTitleInput;}
+    get scoreInfoTextArea(){return this._scoreInfoTextArea;}
     
     set measureCount(val){this._measureCount = val;}    
     set isFirstMeasure(val){this._isFirstMeasure = val;}
@@ -99,7 +104,10 @@ class TabWriterManager{
         
         let measureArrays = [];
         let allMeasures = tabWriterManager.measures;
-        console.log(allMeasures);
+
+        let scoreTitleToSave = tabWriterManager.scoreTitleInput.value;
+        let scoreInfoToSave = tabWriterManager.scoreInfoTextArea.value;
+        console.log(`${scoreTitleToSave} : ${scoreInfoToSave}`);
 
         allMeasures.forEach(measure => {
 
@@ -135,7 +143,7 @@ class TabWriterManager{
                 return;
             }
 
-            let contentToWrite = '';
+            let contentToWrite = `${scoreTitleToSave}\n${scoreInfoToSave}\n`;
             
             /*Coordinate system for writing details to file
              positionOfMeasure:row:col:val*/
@@ -185,31 +193,45 @@ class TabWriterManager{
 
     processData(readContents){
 
-        //Constant variable that help navigating through the readContents parameter to get info needed to create the tab composition
-        const INDEX_OF_MEASURE_MODEL_START = 0;
+        //Splits readContents by \n
+        let readContentsSplit = readContents.toString().split(/\r?\n/); 
 
+        //Title is the first line in the opened file
+        let scoreTitle = readContentsSplit[0];
+        let scoreInfo = '';
+        for(let i=1; i< readContentsSplit.length - 1; i++){
+            scoreInfo += readContentsSplit[i] + '\n';
+        }
+
+        //Line with value cells is the last line in the doc
+        let valueCellsInfo = readContentsSplit[readContentsSplit.length - 1];
         let infoAsString = '';
         let infoStringArray = [];
 
         //Going through readContents and processing contents to create valueCell objects
-        for(let i=INDEX_OF_MEASURE_MODEL_START; i<readContents.length; i++){
-            if(readContents[i] != ' ') infoAsString += readContents[i];
+        for(let i=0; i<valueCellsInfo.length; i++){
+            if(valueCellsInfo[i] != ' ') infoAsString += valueCellsInfo[i];
             else {
                 infoStringArray = infoAsString.split(':');
                 let newValueCell = new ValueCell(infoStringArray[0], infoStringArray[1], infoStringArray[2], infoStringArray[3]);
+                console.log(newValueCell);
                 tabWriterManager.valueCells.push(newValueCell);
                 infoAsString = '';
                 infoStringArray = [];
-
             }
         }
 
-        tabWriterManager.createOpenedTabComposition();
+        tabWriterManager.createOpenedTabComposition(scoreTitle, scoreInfo);
+
     }
 
-    createOpenedTabComposition(){
+    createOpenedTabComposition(scoreTitle, scoreInfo){
         let valueCells = tabWriterManager.valueCells;
         let maxNumMeasures = 0;
+
+        //Setting score title and score info
+        tabWriterManager.scoreTitleInput.value = scoreTitle;
+        tabWriterManager.scoreInfoTextArea.value = scoreInfo;
 
         //Creating measures
         valueCells.forEach(valueCell => {
@@ -229,6 +251,7 @@ class TabWriterManager{
             let colVal = valueCell.colVal;
             let heldValue = valueCell.heldValue;
 
+            console.log(positionOfMeasure);
             let measureOfInterest = tabWriterManager.measures[positionOfMeasure];
             let tableOfInterest = measureOfInterest.measureTable;
 
@@ -291,4 +314,12 @@ ipcRenderer.on('save-file', tabWriterManager.saveFile);
 ipcRenderer.on('open-file', () => {
     tabWriterManager.reset();
     tabWriterManager.openFile();
+});
+ipcRenderer.on('create-new-window', () => {
+    newWindow = new BrowserWindow({
+        width: 1150,
+        height: 500
+    });
+
+    newWindow.loadFile('src/index.html');
 });

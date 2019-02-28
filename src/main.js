@@ -62,7 +62,7 @@ const createMenu = () => {
 
                 {
                     label: 'New Window',
-                    click: function(){console.log('New Window Clicked');},
+                    click: function(){mainWindow.webContents.send('create-new-window');},
                     accelerator: `${shortcutAccelerator}+Shift+N`
                 },
 
