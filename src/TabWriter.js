@@ -216,38 +216,23 @@ class TabWriterManager{
         //Constant variable that help navigating through the readContents parameter to get info needed to create the tab composition
         const INDEX_OF_MEASURE_MODEL_START = 0;
 
-        //const numBarsToCreate = parseInt(readContents[INDEX_OF_NUM_BARS_TO_CREATE]);
-        let separatorIndicator = 0;
-
-        //For creating a ValueCell object
-        let valueCellPositionOfMeasure = 0;
-        let valueCellRowVal = 0;
-        let valueCellColVal = 0;
-        let valueCellHeldValue = 0;
+        let infoAsString = '';
+        let infoStringArray = [];
 
         //Going through readContents and processing contents to create valueCell objects
         for(let i=INDEX_OF_MEASURE_MODEL_START; i<readContents.length; i++){
-            let val = readContents[i]; //TODO: FAILS ON DOUBLE DIGITS!!!!!!!!!!!!!!!
-            if(val === ':') continue;
-            if(val === ' ') { //Space separates different value cells
-                let newValueCell = new ValueCell(valueCellPositionOfMeasure, valueCellRowVal, valueCellColVal, valueCellHeldValue);
+            if(readContents[i] != ' ') infoAsString += readContents[i];
+            else {
+                infoStringArray = infoAsString.split(':');
+                console.log(infoStringArray);
+                let newValueCell = new ValueCell(infoStringArray[0], infoStringArray[1], infoStringArray[2], infoStringArray[3]);
                 tabWriterManager.valueCells.push(newValueCell);
-                separatorIndicator = 0;
-            }
-            else{
+                infoAsString = '';
+                infoStringArray = [];
 
-                //Switch statement to determine what the current value represents in relation to the value cell
-                switch(separatorIndicator){
-                    case 0: valueCellPositionOfMeasure = parseInt(val); break;
-                    case 1: valueCellRowVal = parseInt(val); break;
-                    case 2: valueCellColVal = parseInt(val); break;
-                    case 3: valueCellHeldValue = val; break; //No need to parse this as this is the value held in the cell
-                }
-
-                separatorIndicator++;
             }
         }
-
+        
         tabWriterManager.createOpenedTabComposition();
     }
 
