@@ -5,8 +5,10 @@ const {BrowserWindow} = electron;
 const {Menu} = electron;
 const ipcMain = electron.ipcMain;
 
+/*TODO: Perhaps the functions do not work in a newly created window because of mainWindow.webContents.send() 
+Need to change mainWindow to refer to current window? */
 let isMacOS = process.platform === 'darwin' ? true : false;
-
+let menu = null;
 const createWindow = () => {
 
     //Main BrowserWindow Object
@@ -46,7 +48,7 @@ const createMenu = () => {
 
                 {
                     label: 'Save',
-                    click: function(){console.log('Save Clicked');},
+                    click: function(){mainWindow.webContents.send('save-file');},
                     accelerator: `${shortcutAccelerator}+S`
                 },
 
@@ -54,7 +56,7 @@ const createMenu = () => {
 
                 {
                     label: 'Save As',
-                    click: function(){mainWindow.webContents.send('save-file');},
+                    click: function(){mainWindow.webContents.send('save-file-as');},
                     accelerator: `${shortcutAccelerator}+Shift+S`
                 },
 
@@ -62,13 +64,13 @@ const createMenu = () => {
 
                 {
                     label: 'New Window',
-                    click: function(){mainWindow.webContents.send('create-new-window');},
+                    click: function(){mainWindow.webContents.send('invoke-create-new-window');},
                     accelerator: `${shortcutAccelerator}+Shift+N`
                 },
 
                 {
                     label: 'Exit',
-                    click: function(){console.log('Exit Clicked');},
+                    click: function(){mainWindow.webContents.send('exit');},
                     accelerator: `${shortcutAccelerator}+W`
                 }
             ]
@@ -96,7 +98,7 @@ const createMenu = () => {
         }
     ];
 
-    const menu = Menu.buildFromTemplate(menuTemplate);
+    menu = Menu.buildFromTemplate(menuTemplate);
     Menu.setApplicationMenu(menu);
 };
 
@@ -117,6 +119,23 @@ app.on('activate', () => {
 //First ackknowledge to create the first bar and measure - This event is triggerred from TabWriter.js
 ipcMain.on('setup-first-measure', (event) => {
     event.sender.send('create-measure'); //Triggerring event in TabWriter.js
+});
+
+ipcMain.on('change-window-title', (args) => {
+    //TODO: Develop this
+    mainWindow.setTitle(args[0]);
+});
+
+ipcMain.on('create-new-window', () => {
+    let newWindow = new BrowserWindow({
+        width: 1150,
+        height: 500
+    });
+
+    newWindow.loadFile('src/index.html');
+
+    newWindow.openDevTools({mode: 'undocked'});
+
 });
 
 
