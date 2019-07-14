@@ -21,9 +21,6 @@ function createMeasure(){
     newTable.style.display = 'inline-block';
     newTableBody.id = `measure${tabWriterManager.measureCount}body`;
 
-    //Variable for width of cells in measure table
-    let colInputWidth = 20;
-
     //Changing measureCount or not for zero indexing consistency with arrays
     if(tabWriterManager.isFirstMeasure) tabWriterManager.isFirstMeasure = false; //No increment if first measure for proper zero indexing
     else tabWriterManager.measureCount += 1;
@@ -41,12 +38,6 @@ function createMeasure(){
             let newTableCol = newRow.insertCell(colCount);
             let inputElementForCol = document.createElement('input');
             inputElementForCol.type = 'text';
-
-            //Setting styles for the newly created input field
-            // inputElementForCol.style.fontFamily = 'Avenir';
-            // inputElementForCol.style.width = `${colInputWidth}px`;
-            // inputElementForCol.style.textAlign = 'center';
-            // inputElementForCol.style.border = 'none';
             
             //Indicates end of measure barline
             if(colCount == 20) inputElementForCol.style.borderRight = '1px solid black';
