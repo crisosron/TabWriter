@@ -2,6 +2,18 @@ html{
     overflow-x: auto;
 }
 
+td > input{
+    font-family: Avenir;
+    width: 20px;
+    text-align: center;
+    border: none;
+
+}
+
+#container{
+    margin: auto;
+}
+
 #scoreTitleInput, textarea{
     font-family: Avenir;
     text-align: center;

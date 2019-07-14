@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Tab Writer</title>
-    <link rel="stylesheet" type="text/css" href="./styles.css">
-</head>
-<body> 
-    <input type='text' id="scoreTitleInput" value="Score Title" />
-    <textarea id="tabInfoTextArea", value="Tab Info">Tab Info</textarea>
-    <div id="container">
-        <!--Programmed measures go here
-        Measures are tables contained within the a div
-        Tables are 6x21 with one column being for EADGBe label-->
-    </div>
-    <script src="TabWriter.js"></script>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Tab Writer</title>
+        <link rel="stylesheet" type="text/css" href="./styles.css">
+    </head>
+    <body> 
+        <input type='text' id="scoreTitleInput" value="Score Title" />
+        <textarea id="tabInfoTextArea", value="Tab Info">Tab Info</textarea>
+        <div id="container">
+            <!--Programmed measures go here
+            Measures are tables contained within the a div
+            Tables are 6x21 with one column being for EADGBe label-->
+        </div>
+        <script src="measure.js"></script>
+        <script src="value-cell.js"></script>
+        <script src="tab-writer-manager.js"></script>
+        <script src="tab-writer.js"></script>
+    </body>
 </html>

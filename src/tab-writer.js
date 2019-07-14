@@ -7,72 +7,11 @@ const fs = require('fs'); //For file system
 const BrowserWindow = electron.remote.BrowserWindow;
 const remote = electron.remote;
 
-class TabWriterManager{
-    constructor(){
-        this._measures = [];
-        this._guitarStringLabels = ['e', 'B', 'G', 'D', 'A', 'E'];
-        this._measureCount = 0;
-        this._container = document.getElementById('container');
-        this._isFirstMeasure = true;
-        this._valueCells = []; //Used for opening a previously saved tab composition
-        this._MEASURE_NUM_ROWS = 6;
-        this._MEASURE_NUM_COLS = 21;
-        this._scoreTitleInput = document.getElementById('scoreTitleInput');
-        this._scoreInfoTextArea = document.getElementById('tabInfoTextArea');
-        this._fileName = null;
-    }
-
-    get measures(){return this._measures;}
-    get guitarStringLabels(){return this._guitarStringLabels;}
-    get measureCount(){return this._measureCount;}
-    get container(){return this._container;}
-    get isFirstMeasure(){return this._isFirstMeasure;}
-    get valueCells(){return this._valueCells;}
-    get MEASURE_NUM_ROWS(){return this._MEASURE_NUM_ROWS;}
-    get MEASURE_NUM_COLS(){return this._MEASURE_NUM_COLS;}
-    get currentBar(){return this._currentBar;}
-    get scoreTitleInput(){return this._scoreTitleInput;}
-    get scoreInfoTextArea(){return this._scoreInfoTextArea;}
-    get fileName(){return this._fileName;}
-    
-    set measureCount(val){this._measureCount = val;}    
-    set isFirstMeasure(val){this._isFirstMeasure = val;}
-    set measures(val){this._measures = val;}
-    set valueCells(val){this._valueCells = val;}
-    set fileName(val){this._fileName = val;}
-}
-
 let tabWriterManager = new TabWriterManager();
 
-class Measure{
-    constructor(table, tableBody, measurePos){
-        this._inputCells = [];
-        this._measureTable = table;
-        this._measureTableBody = tableBody;
-        this._measurePos = measurePos;
-    }
-
-    get inputCells(){return this._inputCells;}
-    get measureTable(){return this._measureTable;}
-    get measureTableBody(){return this._measureTableBody;}
-    get measurePos(){return this._measurePos;}
-}
-
-//Used primarily for opening a file (see processData method on TabWriterManager class)
-class ValueCell {
-    constructor(positionOfMeasure, rowVal, colVal, heldValue){
-        this._positionOfMeasure = positionOfMeasure;
-        this._rowVal = rowVal;
-        this._colVal = colVal;
-        this._heldValue = heldValue;
-    }
-    
-    get positionOfMeasure(){return this._positionOfMeasure;}
-    get rowVal(){return this._rowVal;}
-    get colVal(){return this._colVal;}
-    get heldValue(){return this._heldValue;}
-}
-
+/**
+ * Creates a new measure for the composition - This includes the creation of table, tbody and input elements for each table
+ */
 function createMeasure(){
 
     //Creating table and table body to hold the measure
@@ -94,20 +33,20 @@ function createMeasure(){
     tabWriterManager.measures.push(newMeasure);
 
     //Creating rows and columns and inputs within each table cell
-    for(let rowCount=0; rowCount<tabWriterManager.MEASURE_NUM_ROWS; rowCount++){
+    for(let rowCount=0; rowCount< Measure.NUM_ROWS; rowCount++){
         let newRow = newTableBody.insertRow(rowCount);
-        for (let colCount=0; colCount<tabWriterManager.MEASURE_NUM_COLS; colCount++){
+        for (let colCount=0; colCount< Measure.NUM_COLS; colCount++){
 
-            //Creating cell node and input element
+            //Creating cell at (row, col) and input element
             let newTableCol = newRow.insertCell(colCount);
             let inputElementForCol = document.createElement('input');
             inputElementForCol.type = 'text';
 
             //Setting styles for the newly created input field
-            inputElementForCol.style.fontFamily = 'Avenir';
-            inputElementForCol.style.width = `${colInputWidth}px`;
-            inputElementForCol.style.textAlign = 'center';
-            inputElementForCol.style.border = 'none';
+            // inputElementForCol.style.fontFamily = 'Avenir';
+            // inputElementForCol.style.width = `${colInputWidth}px`;
+            // inputElementForCol.style.textAlign = 'center';
+            // inputElementForCol.style.border = 'none';
             
             //Indicates end of measure barline
             if(colCount == 20) inputElementForCol.style.borderRight = '1px solid black';
@@ -130,6 +69,10 @@ function createMeasure(){
     return newMeasure;
 }
 
+/**
+ * Adds a keyup and click event listeners to the supplied input cell
+ * @param {Object} inputCell Input element to add the listener to
+ */
 function attachInputCellListener(inputCell){
     inputCell.addEventListener('keyup', (e) => {
         if(e.key == 'Backspace') {
@@ -143,6 +86,9 @@ function attachInputCellListener(inputCell){
     });
 }
 
+/**
+ * Resets the state of the tab composition
+ */
 function reset(){
     tabWriterManager.isFirstMeasure = true;
     tabWriterManager.measureCount = 0;
@@ -151,6 +97,10 @@ function reset(){
     while(container.firstChild) container.removeChild(container.firstChild);//Removing child nodes (measures/tables) being stored in the container
 }
 
+/**
+ * Saves the composition
+ * @param {boolean} promptSaveAs A boolean indicating if the 'Save As' prompt should be used.
+ */
 function saveFile(promptSaveAs){
     
     let measureArrays = [];
@@ -167,11 +117,11 @@ function saveFile(promptSaveAs){
         let measureArray = [];
 
         //Getting data cells
-        for(let i=0; i<tabWriterManager.MEASURE_NUM_ROWS; i++){
+        for(let i=0; i < Measure.NUM_ROWS; i++){
             let rowInIteration = table.rows[i];
             let rowInputCellsArray = [];
 
-            for(let j=0; j<tabWriterManager.MEASURE_NUM_COLS; j++){
+            for(let j=0; j < Measure.NUM_COLS; j++){
                 let colInIteration = rowInIteration.cells[j];
                 let inputCell = colInIteration.childNodes[0];
                 rowInputCellsArray.push(inputCell);
@@ -209,6 +159,13 @@ function saveFile(promptSaveAs){
     
 }
 
+/**
+ * Saves the tab composition
+ * @param {array} arrayOfMeasures Array of Measure objects currently in the composition
+ * @param {string} scoreTitleToSave Title of the score
+ * @param {string} scoreInfoToSave Additional information about the score entered by the user that needs to be saved
+ * @return {string} A string with all the information that needs to be saved - Note this will include a compressed representation of the measures 
+ */
 function createContentToSave(arrayOfMeasures, scoreTitleToSave, scoreInfoToSave){
     let contentToWrite = `${scoreTitleToSave}\n${scoreInfoToSave}\n`;
 
@@ -230,6 +187,11 @@ function createContentToSave(arrayOfMeasures, scoreTitleToSave, scoreInfoToSave)
     return contentToWrite;
 }
 
+/**
+ * Writes the contents that need to be saved to a file
+ * @param {string} fileName Name of the file to save to
+ * @param {string} contentToWrite A string of the contents that need to be saved
+ */
 function writeToFile(fileName, contentToWrite){
 
     //Writing contents to file - fileName argument came from callback function from showSaveDialog method
@@ -242,6 +204,9 @@ function writeToFile(fileName, contentToWrite){
     });
 }
 
+/**
+ * Opens a file
+ */
 function openFile(){
     dialog.showOpenDialog(fileNames => {
         if(fileNames === undefined){
@@ -265,6 +230,10 @@ function openFile(){
     });
 }
 
+/**
+ * Splits the contents of a file opened by the openFile method and processes the information accordingly
+ * @param {string} readContents A string of the contents read in its raw form
+ */
 function processData(readContents){
 
     //Splits readContents by \n
@@ -298,6 +267,11 @@ function processData(readContents){
 
 }
 
+/**
+ * Loads the opened tab composition to the screen
+ * @param {string} scoreTitle Title of the opened composition
+ * @param {string} scoreInfo Extra information about the opened composition
+ */
 function createOpenedTabComposition(scoreTitle, scoreInfo){
     let valueCells = tabWriterManager.valueCells;
     let maxNumMeasures = 0;
@@ -327,11 +301,11 @@ function createOpenedTabComposition(scoreTitle, scoreInfo){
         let measureOfInterest = tabWriterManager.measures[positionOfMeasure];
         let tableOfInterest = measureOfInterest.measureTable;
 
-        for(let i=0; i<tabWriterManager.MEASURE_NUM_ROWS; i++){
+        for(let i=0; i < Measure.NUM_ROWS; i++){
             if(i != rowVal) continue;
             let rowInIteration = tableOfInterest.rows[i];
             
-            for(let j=0; j<tabWriterManager.MEASURE_NUM_COLS; j++){
+            for(let j=0; j < Measure.NUM_COLS; j++){
                 if(j != colVal) continue;
                 let colInIteration = rowInIteration.cells[j];
 

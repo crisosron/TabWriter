@@ -18,6 +18,7 @@ const createWindow = () => {
     });
 
     mainWindow.loadFile('src/index.html');
+    //mainWindow.loadFile('src/test.js');
 
     app.on('close', () => {
         if(isMacOS) mainWindow = null;
@@ -123,7 +124,6 @@ ipcMain.on('setup-first-measure', (event) => {
 
 ipcMain.on('change-window-title', (args) => {
     //TODO: Develop this
-    mainWindow.setTitle(args[0]);
 });
 
 ipcMain.on('create-new-window', () => {
