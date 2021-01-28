@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/crisosron/TabWriter#readme",
   "dependencies": {
-    "electron": "^4.0.5"
+    "electron": "^9.4.0"
   }
 }
